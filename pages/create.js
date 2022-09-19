@@ -149,13 +149,7 @@ import {
               h={"30vh"}
               onChange={(e) => setDesc(e.target.value)}
             />
-            <div className="bg-slate-900 h-full w-full text-white editor">
-    <ReactMarkdown previewOptions={{
-          rehypePlugins: [[rehypeSanitize]],
-        }}>
-      {desc}
-    </ReactMarkdown>
-  </div>
+            
           </FormControl>
           <Spacer p={2} />
           <HStack>
