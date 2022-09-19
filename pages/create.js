@@ -146,7 +146,7 @@ import {
               type="text"
               placeholder="Describe your campaign in details"
               size="md"
-              h={"30vh"}
+              h={"40vh"}
               onChange={(e) => setDesc(e.target.value)}
             />
             
