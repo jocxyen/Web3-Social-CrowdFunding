@@ -7,13 +7,15 @@ const Footer = () => {
   const { SetWalletExample } = useContext(Web3Context);
     const launch = useLaunch();
     const isOpen = useIsOpen();
+    
   return (
-
-    <Box fontSize={"sm"} fontWeight="thin" color={"blue.400"}>
+<LightMode>
+    <Box fontSize={"sm"} fontWeight="thin" color={"black"} data-theme="light">
+      
       <Window />
       <Launcher />
       <SetWalletExample />
-    </Box>
+    </Box></LightMode>
   )
 }
 

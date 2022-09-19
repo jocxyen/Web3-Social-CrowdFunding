@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import Web3Modal from "web3modal";
 import { providerOptions } from "./web3Modal";
 import * as UAuthWeb3Modal from "./UAuthWeb3";
+import { useSetWallet } from "@relaycc/receiver";
 import { useToast } from "@chakra-ui/react";
 import axios from "axios";
 import {
@@ -42,6 +43,16 @@ export const Web3Provider = ({ children }) => {
   const [signer, setSigner] = useState("");
   const [campaigns, setCampaigns] = useState([]);
   const toast = useToast();
+
+  function SetWalletExample() {
+      const setWallet = useSetWallet();
+      useEffect(() => {
+      setWallet(signer || null);
+    }, [signer, setWallet]);
+
+    return <></>;
+  }
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const web3modal = new Web3Modal({
@@ -249,6 +260,7 @@ export const Web3Provider = ({ children }) => {
     endCampaigns,
     campaigns,
     account,
+    SetWalletExample
   };
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
