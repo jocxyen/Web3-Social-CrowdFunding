@@ -28,21 +28,20 @@ import {
   
   export default function Navbar() {
     const { isOpen, onToggle } = useDisclosure();
+    const { colorMode, toggleColorMode } = useColorMode();
     const menuColor = useColorModeValue("gray.50", "gray.700");
     return (
       <Box
-       
-        borderBottom={1}
+       borderBottom={1}
         position={"fixed"}
         w="full"
         zIndex={50}
-        
-      >
+        >
         <Flex
           minH={"60px"}
           py={{ base: 2 }}
           px={{ base: 4 }}
-      bgColor={menuColor}
+            bgColor={menuColor}
           shadow={"md"}
           align={"center"}
         >
@@ -83,6 +82,9 @@ import {
             direction={"row"}
             spacing={6}
           >
+            <Button onClick={toggleColorMode}>
+                {colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+              </Button>
             <Auth />
           </Stack>
         </Flex>
