@@ -1,4 +1,4 @@
-import { Flex, HStack, Text, VStack, Button } from "@chakra-ui/react";
+import { Flex, HStack, Text, VStack, Button, Menu, MenuButton, MenuDivider, MenuItem, Box, MenuList } from "@chakra-ui/react";
 import React, { useContext, useEffect } from "react";
 import { Web3Context } from "../context/Web3Context";
 import Avatar from "boring-avatars";
@@ -7,7 +7,7 @@ import { FiChevronDown } from "react-icons/fi";
 import Link from "next/link";
 
 export default function Auth() {
-  const { account, connectWallet, checkIfWalletConnected } =
+  const { account, connectWallet, checkIfWalletConnected, disconnect } =
     useContext(Web3Context);
 
   useEffect(()=>{

@@ -103,7 +103,7 @@ import {
   
       const image = await saveCover(cover);
       const pdf = pdfs ? await savePdf(pdfs) : "";
-      const imgs = await saveImgs(add_imgs);
+      const imgs = imgs?await saveImgs(add_imgs):"";
       const files = await makeJsonData(image, pdf, imgs);
       const url = storeJsonData(files);
       const d = Date.parse(deadline);
@@ -149,6 +149,13 @@ import {
               h={"30vh"}
               onChange={(e) => setDesc(e.target.value)}
             />
+            <div className="bg-slate-900 h-full w-full text-white editor">
+    <ReactMarkdown previewOptions={{
+          rehypePlugins: [[rehypeSanitize]],
+        }}>
+      {desc}
+    </ReactMarkdown>
+  </div>
           </FormControl>
           <Spacer p={2} />
           <HStack>
