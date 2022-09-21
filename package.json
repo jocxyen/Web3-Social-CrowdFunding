@@ -16,6 +16,7 @@
     "@emotion/styled": "^11.10.0",
     "@fontsource/dm-sans": "^4.5.8",
     "@relaycc/receiver": "^0.1.51",
+    "@tableland/sdk": "^3.1.2",
     "@uauth/js": "^2.2.0",
     "@uauth/web3modal": "^2.2.0",
     "@walletconnect/web3-provider": "^1.8.0",
