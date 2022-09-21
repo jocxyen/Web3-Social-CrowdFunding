@@ -15,6 +15,7 @@ import {
     useBreakpointValue,
     useDisclosure,
     useColorMode,
+    Select,
   } from "@chakra-ui/react";
   import {
     HamburgerIcon,
@@ -25,8 +26,12 @@ import {
     ChevronRightIcon,
   } from "@chakra-ui/icons";
   import Auth from "./Auth";
+import { useContext } from "react";
+import { Web3Context } from "../context/Web3Context";
   
   export default function Navbar() {
+    const { switchNetwork } =
+    useContext(Web3Context);
     const { isOpen, onToggle } = useDisclosure();
     const { colorMode, toggleColorMode } = useColorMode();
     const menuColor = useColorModeValue("gray.50", "gray.700");
@@ -72,7 +77,13 @@ import {
               </Link>
             </Flex>
             <Flex display={{ base: "none", md: "flex" }} ml={10}>
+            
               <DesktopNav />
+              <Select placeholder="Select network" onChange={e=>switchNetwork(e.target.value)}>
+                  <option value="0x13881">Polygon Mumbai</option>
+                  <option value="0x2696efe5">SKALE Network</option>
+                </Select>
+
             </Flex>
           </Flex>
   

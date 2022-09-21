@@ -7,12 +7,16 @@ import { useSetWallet } from "@relaycc/receiver";
 import { useToast } from "@chakra-ui/react";
 import axios from "axios";
 import {
-  ManagerAddr,
+  ManagerAddr_M,
+  ManagerAddr_S,
   ManagerABI,
   CampaignABI,
   ERC20ABI,
-  DAI,
+  TDAI_S,
+  TDAI_M
 } from "./constant";
+// Import `connect` from the Tableland library
+import { connect } from "@tableland/sdk";
 
 export const Web3Context = React.createContext();
 
@@ -20,7 +24,7 @@ const fetchERC20Contract = (address, signerOrProvider) => {
   return new ethers.Contract(address, ERC20ABI, signerOrProvider);
 };
 
-const fetchManagerContract = (signerOrProvider) => {
+const fetchManagerContract = (ManagerAddr,signerOrProvider) => {
   return new ethers.Contract(ManagerAddr, ManagerABI, signerOrProvider);
 };
 
@@ -43,7 +47,41 @@ export const Web3Provider = ({ children }) => {
   const [signer, setSigner] = useState("");
   const [campaigns, setCampaigns] = useState([]);
   const toast = useToast();
+  const [tbl, setTbl] = useState();
+  const [tblName, setTblName] = useState('campaign_table_80001_2372'); //campaign_table_80001_2372
 
+  async function startTableLand() {
+    const tbl = await connect({ network: "testnet", chain: "polygon-mumbai" });
+    setTbl(tbl);
+    await tbl.siwe();
+  }
+  useEffect(() => {
+    startTableLand();
+  }, []);
+
+  const createTable = async () => {
+    const { name } = await tbl.create(
+      `id integer, link text, primary key (id)`, // Table schema definition
+      {
+        prefix: `campaign_table`, // Optional `prefix` used to define a human-readable string
+      }
+    );
+    console.log(name);
+    setTblName(name);
+  };
+
+  const writeTable = async (_id,ipfs) => {
+    const writeRes = await tbl.write(
+      `INSERT INTO campaign_table_80001_2372 (id, link) VALUES (${_id}, ('${ipfs}'));`
+    );
+    console.log(writeRes);
+  };
+
+  const displayTable = async () => {
+    const readRes = await tbl.read(`SELECT * FROM ${tblName};`);
+    console.log(readRes);
+  };
+  
   function SetWalletExample() {
       const setWallet = useSetWallet();
       useEffect(() => {
@@ -142,10 +180,11 @@ export const Web3Provider = ({ children }) => {
       const library = new ethers.providers.Web3Provider(provider);
       const signer = library.getSigner();
       setSigner(signer);
-      const accounts = await library.listAccounts();
-      const network = await library.getNetwork();
       setProvider(provider);
       setLibrary(library);
+      const accounts = await library.listAccounts();
+      const network = await library.getNetwork();
+      
       if (accounts) {
         setAccount(accounts[0]);
         setCurrentAddress(accounts[0]);
@@ -153,6 +192,27 @@ export const Web3Provider = ({ children }) => {
       setChainId(network.chainId);
     } catch (error) {
       setError(error);
+    }
+  };
+
+  const switchNetwork = async (chain) => {
+    try { await library.provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: chain }]
+      });
+      console.log("hahahahahaha")
+      
+    } catch (switchError) {
+      if (switchError.code === 4902) {
+        try {
+          await library.provider.request({
+            method: "wallet_addEthereumChain",
+            params: [networkParams[toHex(1666600000)]]
+          });
+        } catch (error) {
+          setError(error);
+        }
+      }
     }
   };
 
@@ -185,9 +245,41 @@ export const Web3Provider = ({ children }) => {
   };
 
   const createCampaign = async (target, deadline, url) => {
+    
     console.log(url, ethers.utils.parseEther(target.toString()), deadline);
     try {
-      const ManagerContract = fetchManagerContract(signer);
+      const ManagerContract = fetchManagerContract(ManagerAddr_M,signer);
+      const tx = await ManagerContract.createCampaign(
+        ethers.utils.parseEther(target.toString()),
+        deadline
+      );
+      await tx.wait();
+      toast({
+        title: "Campaign created",
+        description: "You've launched a campaign",
+        status: "success",
+        duration: 9000,
+        isClosable: true,
+      });
+      const res = await ManagerContract.getTotalCampaigns();
+      const id = res.toNumber()
+      url.then(async cid=>await writeTable(res.toNumber(),cid.toString()))
+    } catch (err) {
+      console.log(err);
+      toast({
+        title: "An error occurred",
+        description: "Something's wrong. Please try again",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
+    } 
+  };
+/** 
+  const createCampaign = async (target, deadline, url) => {
+    console.log(url, ethers.utils.parseEther(target.toString()), deadline);
+    try {
+      const ManagerContract = fetchManagerContract(chainId==80001?ManagerAddr_M:ManagerAddr_S,signer);
       const tx = await ManagerContract.createCampaign(
         url,
         ethers.utils.parseEther(target.toString()),
@@ -212,7 +304,7 @@ export const Web3Provider = ({ children }) => {
       });
     }
   };
-
+*/
   const contribute = async (addr, amount) => {
     console.log(addr, amount);
     const erc20Contract = fetchERC20Contract(DAI, signer);
@@ -239,6 +331,7 @@ export const Web3Provider = ({ children }) => {
     if (web3Modal?.cachedProvider) {
       console.log("reconnect...", web3Modal.cachedProvider);
       await connectWallet();
+     
     }
     if (currentAddress == "") {
       await connectWallet();
@@ -260,7 +353,9 @@ export const Web3Provider = ({ children }) => {
     endCampaigns,
     campaigns,
     account,
-    SetWalletExample
+    SetWalletExample,
+    switchNetwork,
+    createTable
   };
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
