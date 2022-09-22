@@ -1,5 +1,6 @@
-import { Box } from "@chakra-ui/react";
-import { useState } from "react";
+import { Box, Text } from "@chakra-ui/react";
+import { useContext, useEffect, useState } from "react";
+import { Web3Context } from "../context/Web3Context";
 import Card from "./Card";
 
 const CampaignList = () => {

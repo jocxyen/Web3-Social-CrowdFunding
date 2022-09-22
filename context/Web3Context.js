@@ -48,14 +48,15 @@ export const Web3Provider = ({ children }) => {
   const [campaigns, setCampaigns] = useState([]);
   const toast = useToast();
   const [tbl, setTbl] = useState();
-  const [tblName, setTblName] = useState('campaign_table_80001_2372'); //campaign_table_80001_2372
+  const [tblName, setTblName] = useState('campaign_table_80001_2585'); //campaign_table_80001_2585
 
   async function startTableLand() {
     const tbl = await connect({ network: "testnet", chain: "polygon-mumbai" });
     setTbl(tbl);
     await tbl.siwe();
   }
-  useEffect(() => {
+
+ useEffect(() => {
     startTableLand();
   }, []);
 
@@ -71,15 +72,17 @@ export const Web3Provider = ({ children }) => {
   };
 
   const writeTable = async (_id,ipfs) => {
+  
     const writeRes = await tbl.write(
-      `INSERT INTO campaign_table_80001_2372 (id, link) VALUES (${_id}, ('${ipfs}'));`
+      `INSERT INTO ${tblName} (id, link) VALUES (${_id}, ('${ipfs}'));`
     );
     console.log(writeRes);
   };
 
   const displayTable = async () => {
     const readRes = await tbl.read(`SELECT * FROM ${tblName};`);
-    console.log(readRes);
+    console.log(readRes.rows)
+    return readRes.rows;
   };
   
   function SetWalletExample() {
@@ -105,7 +108,8 @@ export const Web3Provider = ({ children }) => {
 
   const fetchCampaigns = async () => {
     try {
-      const contract = fetchManagerContract(library);
+      const curl = await displayTable()
+      const contract = fetchManagerContract(ManagerAddr_M ,library);
       const res = await contract.getTotalCampaigns();
       const count = res.toNumber();
       console.log("count:", count);
@@ -118,6 +122,7 @@ export const Web3Provider = ({ children }) => {
         let target = ethers.utils.formatEther(camps.target[i]._hex);
         let campIds = camps.campaignId[i]._hex;
         let campstate = camps.Status[i]._hex;
+        
         let deadline;
         let cover;
         let imgs;
@@ -127,9 +132,9 @@ export const Web3Provider = ({ children }) => {
         let pdf;
         let imgcid;
         let video;
-        let updates;
+        let updates; 
         await axios
-          .get(`https://ipfs.io/ipfs/${camps.url[i]}/.json`)
+          .get(`https://ipfs.io/ipfs/${curl[i][1]}/.json`)
           .then(async (res) => {
             console.log(res.data);
             title = res.data.title;
@@ -338,7 +343,7 @@ export const Web3Provider = ({ children }) => {
     }
   };
   useEffect(() => {
-    checkIfWalletConnected();
+    connectWallet()
   }, []);
 
   const value = {
