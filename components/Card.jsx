@@ -13,7 +13,7 @@ import {
   const Card = ({ c, t }) => {
     console.log({ c });
     return (
-      <NextLink href={{ pathname: '/campaign-details', query: c }}>
+      <NextLink href={{ pathname: '/campaigns/campaign-details', query: c }}>
         <Box display={"flex"} flex={1} fontFamily="mono">
         <Box
           pos={"relative"}
