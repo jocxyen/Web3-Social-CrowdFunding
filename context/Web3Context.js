@@ -355,6 +355,7 @@ export const Web3Provider = ({ children }) => {
     createCampaign,
     contribute,
     fetchCampaigns,
+    chainId,
     endCampaigns,
     campaigns,
     account,
