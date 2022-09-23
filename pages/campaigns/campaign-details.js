@@ -27,6 +27,7 @@ import {
   Link,
 } from "@chakra-ui/react";
 import { useLaunch } from "@relaycc/receiver";
+import DonateModal from "../../components/DonateModal";
 
 const CampaignDetails = () => {
   const { chainId } =
@@ -178,9 +179,7 @@ const router = useRouter();
 
             <Input placeholder="Enter donation amount" />
           </InputGroup>
-          <Button mt={2} colorScheme={"blue"} variant="outline">
-            Support 💪
-          </Button>
+          <DonateModal />
           <Button onClick={() => launch(c.creator)}>Get in touch</Button>
           <Share />
         </Container>
