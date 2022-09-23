@@ -4,6 +4,7 @@ import Web3Modal from "web3modal";
 import { providerOptions } from "./web3Modal";
 import * as UAuthWeb3Modal from "./UAuthWeb3";
 import { useSetWallet } from "@relaycc/receiver";
+import {Framework} from "@superfluid-finance/sdk-core"
 import { useToast } from "@chakra-ui/react";
 import axios from "axios";
 import {
