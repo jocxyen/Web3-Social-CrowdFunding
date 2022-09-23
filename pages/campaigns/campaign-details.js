@@ -5,11 +5,11 @@ import Image from "next/image";
 import { MdDateRange, MdEmail } from "react-icons/md";
 import { LinkIcon } from "@chakra-ui/icons";
 import { FaDonate } from "react-icons/fa";
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown from "react-markdown";
 import { Web3Context } from "../../context/Web3Context";
 import truncateMiddle from "../../utils/truncateMiddle";
 
-import Share from "../../components/Share"
+import Share from "../../components/Share";
 import {
   Box,
   CircularProgress,
@@ -25,15 +25,24 @@ import {
   Text,
   useColorModeValue,
   Link,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverFooter,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverAnchor,
 } from "@chakra-ui/react";
 import { useLaunch } from "@relaycc/receiver";
 import DonateModal from "../../components/DonateModal";
-
+import Avatar from "boring-avatars";
 const CampaignDetails = () => {
-  const { chainId } =
-  useContext(Web3Context);
-  
+  const { chainId, fetchUserBalance } = useContext(Web3Context);
+
   const [isLoading, setIsLoading] = useState(true);
+  const [showBalance, setShowBalance] = useState();
   const boxBg = useColorModeValue("", "gray.700");
   const launch = useLaunch();
   const [c, setC] = useState({
@@ -54,15 +63,41 @@ const CampaignDetails = () => {
     website: "",
     video: "",
   });
-const router = useRouter();
+  const router = useRouter();
   useEffect(() => {
     if (!router.isReady) return;
     setC(router.query);
-    console.log(chainId)
+    console.log(chainId);
+
     setIsLoading(false);
   }, [router.isReady]);
-  
 
+  useEffect(() => {
+    async function fetchData() {
+      console.log(c.creator);
+      if (c.creator == "") return;
+      const balance = await fetchUserBalance(c.creator);
+      if (!balance) return ""
+      try {
+        const show = balance
+          
+          .map((i, index) => {
+            return (
+              <Text key={index} textAlign="center">
+                {" "}
+                {(i.balance / 10 ** i.contract_decimals).toFixed(2)}&nbsp;
+                {i.contract_ticker_symbol}
+              </Text>
+            );
+          });
+        setShowBalance(show);
+        console.log(showBalance)
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    fetchData();
+  }, [c.creator]);
   if (isLoading)
     return (
       <Box p={10} pt={100} w={"100%"}>
@@ -71,7 +106,9 @@ const router = useRouter();
     );
   return (
     <Box p={10} pt={100} w={"100%"}>
-      <Text fontSize={"xx-large"} fontWeight={700} mb={4}>{c.title}</Text>
+      <Text fontSize={"xx-large"} fontWeight={700} mb={4}>
+        {c.title}
+      </Text>
       <Box
         display={"flex"}
         w="100%"
@@ -82,7 +119,7 @@ const router = useRouter();
         <Box display={"flex"} flex={3} flexDir={"column"} gap={4}>
           <Box>
             <Img
-              src="https://images.ctfassets.net/81iqaqpfd8fy/43n1LWlPbi64oaeiQeUiQ0/d3d9c4a5582ff7d74899dcbb032af692/Homeless.jpg?h=620&w=1440"
+              src={`https://ipfs.io/ipfs/${c.cover}`}
               objectFit={"contain"}
               fit={"cover"}
               align={"center"}
@@ -90,30 +127,71 @@ const router = useRouter();
               rounded={"lg"}
             />
           </Box>
-          <Flex justifyContent={"space-between"} color={"gray.500"}>
-            
-            <Text>Created 4 days ago by <Link
-                      href={chainId==80001?`https://mumbai.polygonscan.com/address/${c.creator}`:`https://hackathon-complex-easy-naos.explorer.eth-online.skalenodes.com/address/${c.creator}/transactions`}
+          <Flex color={"gray.500"}>
+            <Text>Created 4 days ago by </Text>
+            <Popover>
+              <PopoverTrigger>
+                <Text cursor={"pointer"}>
+                  {" "}
+                  &nbsp;{truncateMiddle(c.creator)}
+                </Text>
+              </PopoverTrigger>
+              <PopoverContent>
+                <PopoverArrow />
+                <PopoverCloseButton />
+                <PopoverHeader>
+                  <Box
+                    alignItem="center"
+                    justifyContent="center"
+                    w="100%"
+                    display="flex"
+                  >
+                    <Avatar
+                      size={60}
+                      name={c.creator}
+                      variant="beam"
+                      colors={[
+                        "#92A1C6",
+                        "#146A7C",
+                        "#F0AB3D",
+                        "#C271B4",
+                        "#C20D90",
+                      ]}
+                    />
+                    <Link
+                      href={
+                        chainId == 80001
+                          ? `https://mumbai.polygonscan.com/address/${c.creator}`
+                          : `https://hackathon-complex-easy-naos.explorer.eth-online.skalenodes.com/address/${c.creator}/transactions`
+                      }
                       isExternal
                     >
-                      {truncateMiddle(c.creator)}
-                    </Link></Text>
+                      <Text p={4}>{truncateMiddle(c.creator)}</Text>
+                    </Link>
+                  </Box>
+                </PopoverHeader>
+                <PopoverBody><Text fontWeight={700} textAlign="center">Account Balance</Text>{showBalance}</PopoverBody>
+              </PopoverContent>
+            </Popover>
           </Flex>
           <Text fontSize={"xl"} fontWeight="bold" py={4}>
             Details
           </Text>
-          <ReactMarkdown >
-            {c.desc}
-          </ReactMarkdown>
-          {c.video.includes('you')&&<iframe
-            width="734"
-            height="413"
-            src={`${c.video.replace('https://youtu.be/','https://www.youtube.com/embed/')}`}
-            title="'What's going on in the Algorand Ecosystem' at University of Florida's Blockchain Lab session."
-            frameBorder="0"
-            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>}
+          <ReactMarkdown>{c.desc}</ReactMarkdown>
+          {c.video.includes("you") && (
+            <iframe
+              width="734"
+              height="413"
+              src={`${c.video.replace(
+                "https://youtu.be/",
+                "https://www.youtube.com/embed/"
+              )}`}
+              title="'What's going on in the Algorand Ecosystem' at University of Florida's Blockchain Lab session."
+              frameBorder="0"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          )}
         </Box>
         <Container
           display={"flex"}
@@ -149,7 +227,7 @@ const router = useRouter();
             </Box>
             <Box w="90%" mx={"auto"} mb={4}>
               <Progress
-                 value={Number((c.raised * 100) / c.target)}
+                value={Number((c.raised * 100) / c.target)}
                 size="sm"
                 colorScheme="blue"
                 rounded={"lg"}
@@ -170,7 +248,6 @@ const router = useRouter();
               <Text>&nbsp;{c.website}</Text>
             </Flex>
           </Box>
-          
 
           <InputGroup>
             <InputLeftElement pointerEvents="none" fontSize="1.2em">

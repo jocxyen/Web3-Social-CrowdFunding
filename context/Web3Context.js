@@ -1,4 +1,4 @@
-import React, {useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import Web3Modal from "web3modal";
 import { providerOptions } from "./web3Modal";
@@ -13,7 +13,7 @@ import {
   CampaignABI,
   ERC20ABI,
   TDAI_S,
-  TDAI_M
+  TDAI_M,
 } from "./constant";
 // Import `connect` from the Tableland library
 import { connect } from "@tableland/sdk";
@@ -24,7 +24,7 @@ const fetchERC20Contract = (address, signerOrProvider) => {
   return new ethers.Contract(address, ERC20ABI, signerOrProvider);
 };
 
-const fetchManagerContract = (ManagerAddr,signerOrProvider) => {
+const fetchManagerContract = (ManagerAddr, signerOrProvider) => {
   return new ethers.Contract(ManagerAddr, ManagerABI, signerOrProvider);
 };
 
@@ -48,17 +48,17 @@ export const Web3Provider = ({ children }) => {
   const [campaigns, setCampaigns] = useState([]);
   const toast = useToast();
   const [tbl, setTbl] = useState();
-  const [tblName, setTblName] = useState('campaign_table_80001_2585'); //campaign_table_80001_2585
-
+  const [tblName, setTblName] = useState("campaign_table_80001_2585"); //campaign_table_80001_2585
+  const [balance, setBalance] = useState({});
   async function startTableLand() {
     const tbl = await connect({ network: "testnet", chain: "polygon-mumbai" });
     setTbl(tbl);
     await tbl.siwe();
   }
 
- useEffect(() => {
+  /**useEffect(() => {
     startTableLand();
-  }, []);
+  }, []);*/
 
   const createTable = async () => {
     const { name } = await tbl.create(
@@ -71,8 +71,7 @@ export const Web3Provider = ({ children }) => {
     setTblName(name);
   };
 
-  const writeTable = async (_id,ipfs) => {
-  
+  const writeTable = async (_id, ipfs) => {
     const writeRes = await tbl.write(
       `INSERT INTO ${tblName} (id, link) VALUES (${_id}, ('${ipfs}'));`
     );
@@ -81,13 +80,13 @@ export const Web3Provider = ({ children }) => {
 
   const displayTable = async () => {
     const readRes = await tbl.read(`SELECT * FROM ${tblName};`);
-    console.log(readRes.rows)
+    console.log(readRes.rows);
     return readRes.rows;
   };
-  
+
   function SetWalletExample() {
-      const setWallet = useSetWallet();
-      useEffect(() => {
+    const setWallet = useSetWallet();
+    useEffect(() => {
       setWallet(signer || null);
     }, [signer, setWallet]);
 
@@ -108,8 +107,8 @@ export const Web3Provider = ({ children }) => {
 
   const fetchCampaigns = async () => {
     try {
-      const curl = await displayTable()
-      const contract = fetchManagerContract(ManagerAddr_M ,library);
+      const curl = await displayTable();
+      const contract = fetchManagerContract(ManagerAddr_M, library);
       const res = await contract.getTotalCampaigns();
       const count = res.toNumber();
       console.log("count:", count);
@@ -122,7 +121,7 @@ export const Web3Provider = ({ children }) => {
         let target = ethers.utils.formatEther(camps.target[i]._hex);
         let campIds = camps.campaignId[i]._hex;
         let campstate = camps.Status[i]._hex;
-        
+
         let deadline;
         let cover;
         let imgs;
@@ -132,7 +131,7 @@ export const Web3Provider = ({ children }) => {
         let pdf;
         let imgcid;
         let video;
-        let updates; 
+        let updates;
         await axios
           .get(`https://ipfs.io/ipfs/${curl[i][1]}/.json`)
           .then(async (res) => {
@@ -146,7 +145,7 @@ export const Web3Provider = ({ children }) => {
             deadline = res.data.deadline;
             website = res.data.website;
             video = res.data.video;
-            updates = res.data.updates
+            updates = res.data.updates;
           });
 
         let camp = {
@@ -166,7 +165,7 @@ export const Web3Provider = ({ children }) => {
           deadline: deadline,
           website: website,
           video: video,
-          updates: updates
+          updates: updates,
         };
         campsList.push(camp);
         console.log(camp);
@@ -189,7 +188,7 @@ export const Web3Provider = ({ children }) => {
       setLibrary(library);
       const accounts = await library.listAccounts();
       const network = await library.getNetwork();
-      
+
       if (accounts) {
         setAccount(accounts[0]);
         setCurrentAddress(accounts[0]);
@@ -201,18 +200,18 @@ export const Web3Provider = ({ children }) => {
   };
 
   const switchNetwork = async (chain) => {
-    try { await library.provider.request({
+    try {
+      await library.provider.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: chain }]
+        params: [{ chainId: chain }],
       });
-      console.log("hahahahahaha")
-      
+      console.log("hahahahahaha");
     } catch (switchError) {
       if (switchError.code === 4902) {
         try {
           await library.provider.request({
             method: "wallet_addEthereumChain",
-            params: [networkParams[toHex(1666600000)]]
+            params: [networkParams[toHex(1666600000)]],
           });
         } catch (error) {
           setError(error);
@@ -230,30 +229,23 @@ export const Web3Provider = ({ children }) => {
     setSignature("");
   };
 
-  const fetchUserNFTs = async (account) => {
-    console.log(account);
-    const options = {
-        method: 'GET',
-        url: `https://api.nftport.xyz/v0/accounts/${account}`,
-        params: {chain: 'mumbai', page_size: '5', include: 'metadata'},
-        headers: {'Content-Type': 'application/json', Authorization: process.env.NEXT_PUBLIC_NFTPORT_KEY}
-      };
-    await axios.request(options)
-      .then(async (res) => {
-        console.log(res);
-        const nfts = res.data.nfts.filter((nft) =>
-          nft.contract_address.includes(whitelist)
-        );
-        setUserNFTs(nfts);
-        console.log(userNFTs);
+  const fetchUserBalance = async (account) => {
+    await axios
+      .get(
+        `https://api.covalenthq.com/v1/80001/address/${account}/balances_v2/?quote-currency=USD&format=JSON&nft=false&no-nft-fetch=true&key=${process.env.NEXT_PUBLIC_COVALENT_KEY}`
+      )
+      .then((res) => {
+        console.log(res.data.data.items);
+        setBalance(res.data.data.items);
+        console.log(balance);
       });
+      return balance
   };
 
   const createCampaign = async (target, deadline, url) => {
-    
     console.log(url, ethers.utils.parseEther(target.toString()), deadline);
     try {
-      const ManagerContract = fetchManagerContract(ManagerAddr_M,signer);
+      const ManagerContract = fetchManagerContract(ManagerAddr_M, signer);
       const tx = await ManagerContract.createCampaign(
         ethers.utils.parseEther(target.toString()),
         deadline
@@ -267,8 +259,8 @@ export const Web3Provider = ({ children }) => {
         isClosable: true,
       });
       const res = await ManagerContract.getTotalCampaigns();
-      const id = res.toNumber()
-      url.then(async cid=>await writeTable(res.toNumber(),cid.toString()))
+      const id = res.toNumber();
+      url.then(async (cid) => await writeTable(res.toNumber(), cid.toString()));
     } catch (err) {
       console.log(err);
       toast({
@@ -278,9 +270,9 @@ export const Web3Provider = ({ children }) => {
         duration: 9000,
         isClosable: true,
       });
-    } 
+    }
   };
-/** 
+  /** 
   const createCampaign = async (target, deadline, url) => {
     console.log(url, ethers.utils.parseEther(target.toString()), deadline);
     try {
@@ -336,14 +328,13 @@ export const Web3Provider = ({ children }) => {
     if (web3Modal?.cachedProvider) {
       console.log("reconnect...", web3Modal.cachedProvider);
       await connectWallet();
-     
     }
     if (currentAddress == "") {
       await connectWallet();
     }
   };
   useEffect(() => {
-    connectWallet()
+    connectWallet();
   }, []);
 
   const value = {
@@ -351,7 +342,7 @@ export const Web3Provider = ({ children }) => {
     connectWallet,
     checkIfWalletConnected,
     disconnect,
-    fetchUserNFTs,
+    fetchUserBalance,
     createCampaign,
     contribute,
     fetchCampaigns,
@@ -361,7 +352,7 @@ export const Web3Provider = ({ children }) => {
     account,
     SetWalletExample,
     switchNetwork,
-    createTable
+    createTable,
   };
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
