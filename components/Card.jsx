@@ -14,7 +14,7 @@ import {
     console.log({ c });
     return (
       <NextLink href={{ pathname: '/campaigns/campaign-details', query: c }}>
-        <Box display={"flex"} flex={1} fontFamily="mono">
+        <Box display={"flex"} flex={1}  cursor={"pointer"}>
         <Box
           pos={"relative"}
           p={2}
