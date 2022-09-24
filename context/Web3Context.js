@@ -18,6 +18,7 @@ import {
 } from "./constant";
 // Import `connect` from the Tableland library
 import { connect } from "@tableland/sdk";
+import { calculateFlowRate } from "../utils/calculateFlowRate";
 
 export const Web3Context = React.createContext();
 
@@ -51,15 +52,17 @@ export const Web3Provider = ({ children }) => {
   const [tbl, setTbl] = useState();
   const [tblName, setTblName] = useState("campaign_table_80001_2585"); //campaign_table_80001_2585
   const [balance, setBalance] = useState({});
+  const [sf,setSf] = useState()
+
   async function startTableLand() {
     const tbl = await connect({ network: "testnet", chain: "polygon-mumbai" });
     setTbl(tbl);
     await tbl.siwe();
   }
 
-  /**useEffect(() => {
+  useEffect(() => {
     startTableLand();
-  }, []);*/
+  }, []);
 
   const createTable = async () => {
     const { name } = await tbl.create(
@@ -189,17 +192,47 @@ export const Web3Provider = ({ children }) => {
       setLibrary(library);
       const accounts = await library.listAccounts();
       const network = await library.getNetwork();
-
+     
       if (accounts) {
         setAccount(accounts[0]);
         setCurrentAddress(accounts[0]);
       }
-      setChainId(network.chainId);
+      setChainId(network.chainId); 
+      
     } catch (error) {
       setError(error);
     }
   };
+  const recurringDonate = async()=>{
+    const sfModal = await Framework.create({
+        networkName: "mumbai",
+        provider: library,
+        chainId:80001
+      });
+    console.log(sfModal)
+    console.log(ethers.utils.isAddress('0x9de69C305986302efF596Db38F017E883cf4B611'))
+    const amount  = ethers.utils.parseUnits("100").toString()
+    const fdaix = await sfModal.loadSuperToken("0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f");
 
+    const signer = sf.createSigner({web3Provider: library})
+     const web3ModalSigner = sfModal.createSigner({ web3Provider: library });
+    
+    const approveOp = fdaix.approve({ receiver: "0xbb0Abea076deC5799AD43920D5223c16b0BB478D", amount: amount });
+    //amount ethers.utils.parseUnits("100").toString() 
+    console.log(fdaix);
+    console.log(web3ModalSigner)
+    const createFlowOperation = sfModal.cfaV1.createFlow({
+      sender: "0x9de69C305986302efF596Db38F017E883cf4B611",
+      receiver:"0xbb0Abea076deC5799AD43920D5223c16b0BB478D",
+      superToken: fdaix.address,
+      flowRate: calculateFlowRate(amount) //"1000000000"
+    });
+  
+      const txnResponse = await createFlowOperation.exec(web3ModalSigner);
+      const txnReceipt = await txnResponse.wait();
+    // Transaction Complete when code reaches here
+    console.log(txnReceipt)
+  }
   const switchNetwork = async (chain) => {
     try {
       await library.provider.request({
@@ -305,17 +338,17 @@ export const Web3Provider = ({ children }) => {
 */
   const contribute = async (addr, amount) => {
     console.log(addr, amount);
-    const erc20Contract = fetchERC20Contract(DAI, signer);
+    const erc20Contract = fetchERC20Contract(TDAI_M, signer);
 
     const allowance = await erc20Contract.allowance(account, addr);
     console.log(allowance);
 
-    if (ethers.utils.formatEther(allowance) < amount) {
-      const tx0 = await erc20Contract.approve(addr, amount);
+    if (ethers.utils.formatEther(allowance) < ethers.utils.parseEther(amount)) {
+      const tx0 = await erc20Contract.approve(addr, ethers.utils.parseEther(amount));
       await tx0.wait();
     }
     const campaignContract = fetchCampaignContract(addr, signer);
-    const tx = await campaignContract.contribute(amount);
+    const tx = await campaignContract.contribute(ethers.utils.parseEther(amount));
     await tx.wait();
   };
 
@@ -354,6 +387,7 @@ export const Web3Provider = ({ children }) => {
     SetWalletExample,
     switchNetwork,
     createTable,
+    recurringDonate
   };
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;

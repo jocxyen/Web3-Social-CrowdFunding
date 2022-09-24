@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext, useState } from 'react'
 import {
     Modal,
     ModalOverlay,
@@ -13,10 +13,16 @@ import {
     useDisclosure,
     Button,
   } from '@chakra-ui/react'
+import { Web3Context } from '../context/Web3Context'
   
-const DonateModal = () => {
+const DonateModal = ({c}) => {
     const { isOpen, onOpen, onClose } = useDisclosure()
-    
+    const [amount, setAmount] = useState(0)
+    const {contribute} = useContext(Web3Context)
+    const handleSubmit = (e)=>{
+      e.preventDefault()
+      contribute(c.campaignAddr, amount)
+    }
   return (
     <>
     <Button mt={2} colorScheme={"blue"} variant="outline" onClick={onOpen}>
@@ -26,22 +32,22 @@ const DonateModal = () => {
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Modal Title</ModalHeader>
+        <ModalHeader>Donation Details</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
         <InputGroup>
             <InputLeftElement pointerEvents="none" fontSize="1.2em">
               ◈
             </InputLeftElement>
-            <Input placeholder="Enter donation amount" />
+            <Input placeholder="Enter donation amount" onChange={(e) => setAmount(e.target.value)}/>
           </InputGroup>
         </ModalBody>
 
         <ModalFooter>
-          <Button colorScheme='blue' mr={3} onClick={onClose}>
+          <Button variant='ghost' mr={3} onClick={onClose}>
             Close
           </Button>
-          <Button variant='ghost'>Donate</Button>
+          <Button colorScheme='blue' variant="outline"  onClick={(e) => handleSubmit(e)}>Donate</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

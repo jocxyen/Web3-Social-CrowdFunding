@@ -3,7 +3,7 @@ import CampaignAbi from "./Campaign.json";
 import ERC20Abi from "./ERC20.json";
 import ERC721Abi from "./ERC721.json";
 
-export const ManagerAddr_M = "0xc1E58F336a6Ecb7A94Fc5F93f8FAf30e8C1475Be";
+export const ManagerAddr_M = "0xcB7bC3203CCFeB6096C2407e17741389323d9d46";
 export const ManagerAddr_S = "0x450d07eBFa4C6525923Ae199D430028360cEEA35";
 export const TDAI_M = "0x9e6fe4FA40832f952883D873893f80221A56e4f8";
 export const TDAI_S = "0x7196194358D9D101F9cE180538f4655aBa3fF180";

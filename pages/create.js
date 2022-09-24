@@ -18,7 +18,7 @@ import {
   import { Web3Storage } from "web3.storage";
   import { Web3Context } from "../context/Web3Context";
   const Create = () => {
-    const { account, connectWallet, createCampaign, createTable, fetchUserBalance } = useContext(Web3Context);
+    const { account, connectWallet, createCampaign, createTable, fetchUserBalance,recurringDonate } = useContext(Web3Context);
     const [cover, setCover] = useState("");
     const [pdfs, setPdfs] = useState("");
     const [title, setTitle] = useState("");
@@ -220,7 +220,7 @@ import {
             Submit
           </Button>
         </form>
-        <Button onClick={fetchUserBalance}>createTable</Button>
+        <Button onClick={recurringDonate}>createTable</Button>
       </Box>
     );
   };
