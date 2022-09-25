@@ -45,7 +45,7 @@ export default function Auth() {
           </MenuButton>
           <MenuList borderColor={"gray.500"}>
             <MenuItem>
-              <Link href={"/dashboard"}>Dashboard</Link>
+              <Link href={"/create"}>Create</Link>
             </MenuItem>
 
             <MenuDivider />
