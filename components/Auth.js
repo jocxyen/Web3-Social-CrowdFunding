@@ -11,6 +11,7 @@ export default function Auth() {
     useContext(Web3Context);
 
   useEffect(()=>{
+    console.log(account);
   if (!account) {
     connectWallet();
     console.log(account);

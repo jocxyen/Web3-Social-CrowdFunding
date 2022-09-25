@@ -38,11 +38,13 @@ import {
 import { useLaunch } from "@relaycc/receiver";
 import DonateModal from "../../components/DonateModal";
 import Avatar from "boring-avatars";
+import axios from "axios";
 const CampaignDetails = () => {
   const { chainId, fetchUserBalance } = useContext(Web3Context);
-
+  
   const [isLoading, setIsLoading] = useState(true);
   const [showBalance, setShowBalance] = useState();
+  const [total, setTotal] = useState(0);
   const boxBg = useColorModeValue("", "gray.700");
   const launch = useLaunch();
   const [c, setC] = useState({
@@ -77,6 +79,21 @@ const CampaignDetails = () => {
       console.log(c.creator);
       if (c.creator == "") return;
       const balance = await fetchUserBalance(c.creator);
+      const options = {
+    method: 'GET',
+    url: `https://api.nftport.xyz/v0/accounts/${c.creator}`,
+    params: {chain: 'polygon'},
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: process.env.NEXT_PUBLIC_NFTPORT_KEY
+    }
+  };
+      axios.request(options).then(function (response) {
+        console.log(response.data);
+        setTotal(response.data.total);
+      }).catch(function (error) {
+        console.error(error);
+      });
       if (!balance) return ""
       try {
         const show = balance
@@ -170,7 +187,7 @@ const CampaignDetails = () => {
                     </Link>
                   </Box>
                 </PopoverHeader>
-                <PopoverBody><Text fontWeight={700} textAlign="center">Account Balance</Text>{showBalance}</PopoverBody>
+                <PopoverBody><Text fontWeight={700} textAlign="center">Account Balance</Text>{showBalance}<Text textAlign={"center"}>Number of NFTs: {total} </Text></PopoverBody>
               </PopoverContent>
             </Popover>
           </Flex>
@@ -249,14 +266,8 @@ const CampaignDetails = () => {
             </Flex>
           </Box>
 
-          <InputGroup>
-            <InputLeftElement pointerEvents="none" fontSize="1.2em">
-              ◈
-            </InputLeftElement>
-
-            <Input placeholder="Enter donation amount" />
-          </InputGroup>
-          <DonateModal />
+            
+          <DonateModal c={c}/>
           <Button onClick={() => launch(c.creator)}>Get in touch</Button>
           <Share />
         </Container>

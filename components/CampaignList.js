@@ -4,11 +4,15 @@ import { Web3Context } from "../context/Web3Context";
 import Card from "./Card";
 
 const CampaignList = () => {
-    const [campaigns, setCampaign] = useState();
-  const { account, fetchCampaigns, connectWallet } = useContext(Web3Context);
+    const [campaigns, setCampaign] = useState([]);
+  const { account, fetchCampaigns,fetchSCampaigns, connectWallet,chainId } = useContext(Web3Context);
   useEffect(() => {
-    if (account) {
+    if (account && chainId==80001) {
       fetchCampaigns().then((item) => setCampaign(item));
+      console.log(campaigns);
+    }
+    else if (account && chainId!=80001) {
+      fetchSCampaigns().then((item) => setCampaign(item));
       console.log(campaigns);
     }
   }, [account]);

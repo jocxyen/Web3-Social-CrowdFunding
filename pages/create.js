@@ -18,7 +18,7 @@ import {
   import { Web3Storage } from "web3.storage";
   import { Web3Context } from "../context/Web3Context";
   const Create = () => {
-    const { account, connectWallet, createCampaign, createTable, fetchUserBalance,recurringDonate } = useContext(Web3Context);
+    const { account, createSCampaign, createCampaign,chainId, fetchUserBalance,recurringDonate } = useContext(Web3Context);
     const [cover, setCover] = useState("");
     const [pdfs, setPdfs] = useState("");
     const [title, setTitle] = useState("");
@@ -109,7 +109,7 @@ import {
       const d = Date.parse(deadline);
       console.log(d);
       console.log(deadline);
-      createCampaign(target, d, url);
+      chainId==80001?createCampaign(target, d, url):createSCampaign(target, d, url);
     };
   
     return (
@@ -220,7 +220,7 @@ import {
             Submit
           </Button>
         </form>
-        <Button onClick={recurringDonate}>createTable</Button>
+        
       </Box>
     );
   };

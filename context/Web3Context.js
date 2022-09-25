@@ -4,7 +4,7 @@ import Web3Modal from "web3modal";
 import { providerOptions } from "./web3Modal";
 import * as UAuthWeb3Modal from "./UAuthWeb3";
 import { useSetWallet } from "@relaycc/receiver";
-import {Framework} from "@superfluid-finance/sdk-core"
+import { Framework } from "@superfluid-finance/sdk-core";
 import { useToast } from "@chakra-ui/react";
 import axios from "axios";
 import {
@@ -12,6 +12,7 @@ import {
   ManagerAddr_S,
   ManagerABI,
   CampaignABI,
+  SCampaignABI,
   ERC20ABI,
   TDAI_S,
   TDAI_M,
@@ -29,11 +30,12 @@ const fetchERC20Contract = (address, signerOrProvider) => {
 const fetchManagerContract = (ManagerAddr, signerOrProvider) => {
   return new ethers.Contract(ManagerAddr, ManagerABI, signerOrProvider);
 };
-
 const fetchCampaignContract = (address, signerOrProvider) => {
   return new ethers.Contract(address, CampaignABI, signerOrProvider);
 };
-
+const fetchSCampaignContract = (address, signerOrProvider) => {
+  return new ethers.Contract(address, SCampaignABI, signerOrProvider);
+};
 export const Web3Provider = ({ children }) => {
   const [web3Modal, setWeb3Modal] = useState();
   const [currentAddress, setCurrentAddress] = useState("");
@@ -50,10 +52,10 @@ export const Web3Provider = ({ children }) => {
   const [campaigns, setCampaigns] = useState([]);
   const toast = useToast();
   const [tbl, setTbl] = useState();
-  const [tblName, setTblName] = useState("campaign_table_80001_2585"); //campaign_table_80001_2585
+  const [tblName, setTblName] = useState("campaign_table_80001_2883");
   const [balance, setBalance] = useState({});
-  const [sf,setSf] = useState()
-
+  const [sf, setSf] = useState();
+  /** 
   async function startTableLand() {
     const tbl = await connect({ network: "testnet", chain: "polygon-mumbai" });
     setTbl(tbl);
@@ -87,7 +89,7 @@ export const Web3Provider = ({ children }) => {
     console.log(readRes.rows);
     return readRes.rows;
   };
-
+*/
   function SetWalletExample() {
     const setWallet = useSetWallet();
     useEffect(() => {
@@ -111,7 +113,6 @@ export const Web3Provider = ({ children }) => {
 
   const fetchCampaigns = async () => {
     try {
-      const curl = await displayTable();
       const contract = fetchManagerContract(ManagerAddr_M, library);
       const res = await contract.getTotalCampaigns();
       const count = res.toNumber();
@@ -137,7 +138,78 @@ export const Web3Provider = ({ children }) => {
         let video;
         let updates;
         await axios
-          .get(`https://ipfs.io/ipfs/${curl[i][1]}/.json`)
+          .get(`https://ipfs.io/ipfs/${camps.url[i]}/.json`)
+          .then(async (res) => {
+            console.log(res.data);
+            title = res.data.title;
+            desc = res.data.description;
+            imgs = res.data.imgs;
+            imgcid = res.data.imgCID;
+            cover = res.data.image;
+            pdf = res.data.pdf;
+            deadline = res.data.deadline;
+            website = res.data.website;
+            video = res.data.video;
+            updates = res.data.updates;
+          });
+
+        let camp = {
+          raised: raised,
+          campIds: campIds,
+          target: target,
+          creator: camps.creator[i],
+          campaignAddr: camps.campaignAddr[i],
+          campstate: campstate,
+          deadline: deadline,
+          title: title,
+          desc: desc,
+          imgs: imgs,
+          imgcid: imgcid,
+          cover: cover,
+          pdf: pdf,
+          deadline: deadline,
+          website: website,
+          video: video,
+          updates: updates,
+        };
+        campsList.push(camp);
+        console.log(camp);
+      }
+      setCampaigns(campsList);
+      return campsList;
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const fetchSCampaigns = async () => {
+    try {
+      const contract = fetchManagerContract(ManagerAddr_S, library);
+      const res = await contract.getTotalCampaigns();
+      const count = res.toNumber();
+      console.log("count:", count);
+      const camps = await contract.getCampaignInfo(count);
+      let campsList = [];
+      console.log(camps);
+
+      for (let i = 0; i < count; i++) {
+        let raised = ethers.utils.formatEther(camps.totalRaised[i]._hex);
+        let target = ethers.utils.formatEther(camps.target[i]._hex);
+        let campIds = camps.campaignId[i]._hex;
+        let campstate = camps.Status[i]._hex;
+
+        let deadline;
+        let cover;
+        let imgs;
+        let title;
+        let desc;
+        let website;
+        let pdf;
+        let imgcid;
+        let video;
+        let updates;
+        await axios
+          .get(`https://ipfs.io/ipfs/${camps.url[i]}/.json`)
           .then(async (res) => {
             console.log(res.data);
             title = res.data.title;
@@ -192,47 +264,46 @@ export const Web3Provider = ({ children }) => {
       setLibrary(library);
       const accounts = await library.listAccounts();
       const network = await library.getNetwork();
-     
+
       if (accounts) {
         setAccount(accounts[0]);
         setCurrentAddress(accounts[0]);
       }
-      setChainId(network.chainId); 
-      
+      setChainId(network.chainId);
     } catch (error) {
       setError(error);
     }
   };
-  const recurringDonate = async()=>{
-    const sfModal = await Framework.create({
-        networkName: "mumbai",
-        provider: library,
-        chainId:80001
-      });
-    console.log(sfModal)
-    console.log(ethers.utils.isAddress('0x9de69C305986302efF596Db38F017E883cf4B611'))
-    const amount  = ethers.utils.parseUnits("100").toString()
-    const fdaix = await sfModal.loadSuperToken("0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f");
 
-    const signer = sf.createSigner({web3Provider: library})
-     const web3ModalSigner = sfModal.createSigner({ web3Provider: library });
-    
-    const approveOp = fdaix.approve({ receiver: "0xbb0Abea076deC5799AD43920D5223c16b0BB478D", amount: amount });
-    //amount ethers.utils.parseUnits("100").toString() 
-    console.log(fdaix);
-    console.log(web3ModalSigner)
-    const createFlowOperation = sfModal.cfaV1.createFlow({
-      sender: "0x9de69C305986302efF596Db38F017E883cf4B611",
-      receiver:"0xbb0Abea076deC5799AD43920D5223c16b0BB478D",
-      superToken: fdaix.address,
-      flowRate: calculateFlowRate(amount) //"1000000000"
+  const recurringDonate = async (addr, amount) => {
+    const sfModal = await Framework.create({
+      networkName: "mumbai",
+      provider: library,
+      chainId: 80001,
     });
-  
-      const txnResponse = await createFlowOperation.exec(web3ModalSigner);
-      const txnReceipt = await txnResponse.wait();
+    console.log(sfModal);
+    const fdaix = await sfModal.loadSuperToken(
+      "0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f"
+    );
+
+    const web3ModalSigner = sfModal.createSigner({ web3Provider: library });
+
+    const approveOp = fdaix.approve({ receiver: addr, amount: amount });
+    //amount ethers.utils.parseUnits("100").toString()
+    console.log(fdaix);
+    console.log(web3ModalSigner);
+    const createFlowOperation = sfModal.cfaV1.createFlow({
+      sender: account,
+      receiver: addr,
+      superToken: fdaix.address,
+      flowRate: calculateFlowRate(amount), //"1000000000"
+    });
+
+    const txnResponse = await createFlowOperation.exec(web3ModalSigner);
+    const txnReceipt = await txnResponse.wait();
     // Transaction Complete when code reaches here
-    console.log(txnReceipt)
-  }
+    console.log(txnReceipt);
+  };
   const switchNetwork = async (chain) => {
     try {
       await library.provider.request({
@@ -273,44 +344,13 @@ export const Web3Provider = ({ children }) => {
         setBalance(res.data.data.items);
         console.log(balance);
       });
-      return balance
+    return balance;
   };
 
   const createCampaign = async (target, deadline, url) => {
     console.log(url, ethers.utils.parseEther(target.toString()), deadline);
     try {
       const ManagerContract = fetchManagerContract(ManagerAddr_M, signer);
-      const tx = await ManagerContract.createCampaign(
-        ethers.utils.parseEther(target.toString()),
-        deadline
-      );
-      await tx.wait();
-      toast({
-        title: "Campaign created",
-        description: "You've launched a campaign",
-        status: "success",
-        duration: 9000,
-        isClosable: true,
-      });
-      const res = await ManagerContract.getTotalCampaigns();
-      const id = res.toNumber();
-      url.then(async (cid) => await writeTable(res.toNumber(), cid.toString()));
-    } catch (err) {
-      console.log(err);
-      toast({
-        title: "An error occurred",
-        description: "Something's wrong. Please try again",
-        status: "error",
-        duration: 9000,
-        isClosable: true,
-      });
-    }
-  };
-  /** 
-  const createCampaign = async (target, deadline, url) => {
-    console.log(url, ethers.utils.parseEther(target.toString()), deadline);
-    try {
-      const ManagerContract = fetchManagerContract(chainId==80001?ManagerAddr_M:ManagerAddr_S,signer);
       const tx = await ManagerContract.createCampaign(
         url,
         ethers.utils.parseEther(target.toString()),
@@ -335,7 +375,35 @@ export const Web3Provider = ({ children }) => {
       });
     }
   };
-*/
+  const createSCampaign = async (target, deadline, url) => {
+    console.log(url, ethers.utils.parseEther(target.toString()), deadline);
+    try {
+      const ManagerContract = fetchManagerContract(ManagerAddr_S, signer);
+      const tx = await ManagerContract.createCampaign(
+        url,
+        ethers.utils.parseEther(target.toString()),
+        deadline
+      );
+      await tx.wait();
+      toast({
+        title: "Campaign created",
+        description: "You've launched a campaign",
+        status: "success",
+        duration: 9000,
+        isClosable: true,
+      });
+    } catch (err) {
+      console.log(err);
+      toast({
+        title: "An error occurred",
+        description: "Something's wrong. Please try again",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
+    }
+  };
+
   const contribute = async (addr, amount) => {
     console.log(addr, amount);
     const erc20Contract = fetchERC20Contract(TDAI_M, signer);
@@ -343,20 +411,38 @@ export const Web3Provider = ({ children }) => {
     const allowance = await erc20Contract.allowance(account, addr);
     console.log(allowance);
 
-    if (ethers.utils.formatEther(allowance) < ethers.utils.parseEther(amount)) {
-      const tx0 = await erc20Contract.approve(addr, ethers.utils.parseEther(amount));
+    if (ethers.utils.formatEther(allowance) < amount) {
+      const tx0 = await erc20Contract.approve(addr, amount);
       await tx0.wait();
     }
     const campaignContract = fetchCampaignContract(addr, signer);
-    const tx = await campaignContract.contribute(ethers.utils.parseEther(amount));
+    const tx = await campaignContract.contribute(amount);
     await tx.wait();
   };
 
+  const contributeS = async (addr, amount) => {
+    console.log(addr, amount);
+    /**const erc20Contract = fetchERC20Contract(TDAI_S, signer);
+
+    const allowance = await erc20Contract.allowance(account, addr);
+    console.log(allowance);
+
+    if (ethers.utils.formatEther(allowance) < amount) {
+      const tx0 = await erc20Contract.approve(addr, amount);
+      await tx0.wait();
+    }*/
+
+    const campaignContract = fetchSCampaignContract(addr, signer);
+    console.log(campaignContract);
+    /**const tx = await campaignContract.contribute(amount);
+    await tx.wait();*/
+  };
+  /**
   const endCampaigns = async (addr) => {
     const campaignContract = fetchCampaignContract(addr, signer);
     const tx = await campaignContract.closeCampaign();
     await tx.wait();
-  };
+  }; */
 
   const checkIfWalletConnected = async () => {
     if (web3Modal?.cachedProvider) {
@@ -379,15 +465,16 @@ export const Web3Provider = ({ children }) => {
     fetchUserBalance,
     createCampaign,
     contribute,
+    contributeS,
     fetchCampaigns,
+    fetchSCampaigns,
     chainId,
-    endCampaigns,
+    createSCampaign,
     campaigns,
     account,
     SetWalletExample,
     switchNetwork,
-    createTable,
-    recurringDonate
+    recurringDonate,
   };
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
