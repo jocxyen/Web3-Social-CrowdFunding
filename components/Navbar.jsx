@@ -266,8 +266,8 @@ import { Web3Context } from "../context/Web3Context";
       href: "/create",
     },
     {
-      label: "Dashboard",
-      href: "/dashboard",
+      label: "Explore",
+      href: "/campaigns",
     },
   ];
   
